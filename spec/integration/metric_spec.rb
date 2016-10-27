@@ -40,7 +40,8 @@ describe Dogapi::Client do
       url = api_url + '/series'
       stub_request(:post, /#{url}/).to_return(body: '{}').then.to_raise(StandardError)
       points = Marshal.load(Marshal.dump(POINTS[0]))
-      expect(dog.send(:emit_points, METRIC, [points])).to eq ['200', {}]
+      expect(dog.send(:emit_points, METRIC, [points]))
+        .to eq(Dogapi::Response.new(200, {}.to_json))
 
       body = Marshal.load(Marshal.dump(EMIT_BODY))
       body['series'][0]['points'] = [body['series'][0]['points'][0]]
@@ -58,7 +59,8 @@ describe Dogapi::Client do
       url = api_url + '/series'
       stub_request(:post, /#{url}/).to_return(body: '{}').then.to_raise(StandardError)
       points = Marshal.load(Marshal.dump(POINTS))
-      expect(dog.send(:emit_points, METRIC, points)).to eq ['200', {}]
+      expect(dog.send(:emit_points, METRIC, points))
+        .to eq(Dogapi::Response.new(200, {}.to_json))
 
       body = MultiJson.dump(EMIT_BODY)
 

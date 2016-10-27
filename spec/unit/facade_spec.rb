@@ -1,4 +1,5 @@
 require 'spec_helper'
+require 'ostruct'
 
 describe Dogapi::Client do
   before(:each) do
@@ -7,7 +8,8 @@ describe Dogapi::Client do
     @service.instance_variable_set(:@uploaded, [])
     def @service.upload(payload)
       @uploaded << payload
-      [200, {}]
+
+      Dogapi::Response.new(200, {}.to_json)
     end
   end
 
@@ -41,11 +43,11 @@ describe Dogapi::Client do
     end
 
     it 'can be batched' do
-      code, = @dogmock.batch_metrics do
+      resp = @dogmock.batch_metrics do
         @dogmock.emit_point('metric.name', 1, type: 'counter')
         @dogmock.emit_point('othermetric.name', 2, type: 'counter')
       end
-      expect(code).to eq 200
+      expect(resp.code).to eq 200
       # Verify that we uploaded what we expected
       uploaded = @service.instance_variable_get(:@uploaded)
       expect(uploaded.length).to eq 1

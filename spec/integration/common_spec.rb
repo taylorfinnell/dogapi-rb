@@ -10,7 +10,8 @@ describe Dogapi::APIService do
       context 'and it is up' do
         it 'only queries one endpoint' do
           stub_request(:get, /#{url}/).to_return(body: '{}').then.to_raise(StandardError)
-          expect(service.request(Net::HTTP::Get, '/api/v1/awesome', nil, nil, true, true)).to eq(['200', {}])
+          expect(service.request(Net::HTTP::Get, '/api/v1/awesome', nil, nil, true, true))
+            .to eq(Dogapi::Response.new(200, {}.to_json))
 
           expect(WebMock).to have_requested(:get, url).with(
             query: default_query
@@ -20,7 +21,8 @@ describe Dogapi::APIService do
       context 'and it is down' do
         it 'only queries one endpoint' do
           stub_request(:get, /#{url}/).to_timeout
-          expect(service.request(Net::HTTP::Get, '/api/v1/awesome', nil, nil, true, true)).to eq([-1, {}])
+          expect(service.request(Net::HTTP::Get, '/api/v1/awesome', nil, nil, true, true))
+            .to eq(Dogapi::Response.new(-1, {}.to_json))
 
           expect(WebMock).to have_requested(:get, url).with(
             query: default_query

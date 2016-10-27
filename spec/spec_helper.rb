@@ -27,7 +27,7 @@ module SpecDog
     it 'queries the api' do
       url = api_url + endpoint
       stub_request(request, /#{url}/).to_return(body: '{}').then.to_raise(StandardError)
-      expect(dog.send(command, *args)).to eq ['200', {}]
+      expect(dog.send(command, *args)).to eq(Dogapi::Response.new(200, {}.to_json))
 
       body = MultiJson.dump(body) if body
 
@@ -44,7 +44,7 @@ module SpecDog
       url = api_url + endpoint
       options = { 'zzz' => 'aaa' }
       stub_request(request, /#{url}/).to_return(body: '{}').then.to_raise(StandardError)
-      expect(dog.send(command, *args, options)).to eq ['200', {}]
+      expect(dog.send(command, *args, options)).to eq(Dogapi::Response.new(200, {}.to_json))
 
       body = MultiJson.dump(body ? (body.merge options) : options)
 
@@ -59,7 +59,7 @@ module SpecDog
     it 'queries the api with params' do
       url = api_url + endpoint
       stub_request(request, /#{url}/).to_return(body: '{}').then.to_raise(StandardError)
-      expect(dog.send(command, *args, *params.values)).to eq ['200', {}]
+      expect(dog.send(command, *args, *params.values)).to eq(Dogapi::Response.new(200, {}.to_json))
 
       params.each { |k, v| params[k] = v.join(',') if v.is_a? Array }
       params = params.merge default_query
@@ -75,7 +75,7 @@ module SpecDog
     it 'queries the api with optional params' do
       url = api_url + endpoint
       stub_request(request, /#{url}/).to_return(body: '{}').then.to_raise(StandardError)
-      expect(dog.send(command, *args, opt_params)).to eq ['200', {}]
+      expect(dog.send(command, *args, opt_params)).to eq(Dogapi::Response.new(200, {}.to_json))
 
       opt_params.each { |k, v| opt_params[k] = v.join(',') if v.is_a? Array }
       params = opt_params.merge default_query

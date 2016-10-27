@@ -67,6 +67,31 @@ module Dogapi
     end
   end
 
+  class Response
+    attr_reader :code, :body, :headers
+
+    # @param [Net::HTTPResponse]
+    def initialize(code, body, headers = [])
+      @code = code
+      @body = body
+      @headers = headers
+    end
+
+    def body
+      @body ||= MultiJson.load(@body)
+    rescue MultiJson::ParseError
+      ''
+    end
+
+    def code
+      @code.to_i
+    end
+
+    def ==(o)
+      o.body == body && o.code == code && headers.to_a == o.headers.to_a
+    end
+  end
+
   # Superclass that deals with the details of communicating with the DataDog API
   class APIService
     def initialize(api_key, application_key, silent=true, timeout=nil, endpoint=nil)
@@ -104,7 +129,7 @@ module Dogapi
       raise e unless @silent
 
       warn e
-      return -1, {}
+      Dogapi::Response.new(-1, {}.to_json)
     end
 
     # Prepares the request and handles the response
@@ -125,7 +150,7 @@ module Dogapi
           end
 
           resp = conn.request(req)
-          return handle_response(resp)
+          handle_response(resp)
         rescue Exception => e
           suppress_error_if_silent e
         end
@@ -141,19 +166,13 @@ module Dogapi
       qs
     end
 
+    # @param [Net::HTTPResponse] resp the http response object
     def handle_response(resp)
-      if resp.code == 204 || resp.body == '' || resp.body == 'null' || resp.body.nil?
-        return resp.code, {}
-      end
-      begin
-        return resp.code, MultiJson.load(resp.body)
-      rescue
-        raise 'Invalid JSON Response: ' + resp.body
-      end
+      Response.new(resp.code, resp.body, resp.each.to_a)
     end
   end
 
-  def Dogapi.find_datadog_host
+  def self.find_datadog_host
     # allow env-based overriding, useful for tests
     ENV['DATADOG_HOST'] || 'https://app.datadoghq.com'
   end
@@ -161,7 +180,7 @@ module Dogapi
   # Memoize the hostname as a module variable
   @@hostname = nil
 
-  def Dogapi.find_localhost
+  def self.find_localhost
     begin
       # prefer hostname -f over Socket.gethostname
       @@hostname ||= %x[hostname -f].strip
